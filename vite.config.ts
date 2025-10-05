@@ -20,6 +20,10 @@ export default defineConfig({
       resolvers: [ElementPlusResolver()],
     }),
   ],
+  base:'./',
+  build:{
+    outDir:'dist'
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
