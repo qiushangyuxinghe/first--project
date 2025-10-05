@@ -1,4 +1,4 @@
-import axios from 'Axios';
+import axios from 'axios';
 import {ElMessage} from 'element-plus'
 import config from "@/config"
 const service = axios.create({
