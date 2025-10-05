@@ -1,11 +1,9 @@
-import Mock from 'mockjs'
+import listSingleton from './listSingleton' // 引入单例
 
-// get请求从config.url获取参数，post从config.body中获取参数
+// 解析URL参数工具函数
 function param2Obj(url) {
   const search = url.split('?')[1]
-  if (!search) {
-    return {}
-  }
+  if (!search) return {}
   return JSON.parse(
     '{"' +
     decodeURIComponent(search)
@@ -16,71 +14,52 @@ function param2Obj(url) {
   )
 }
 
-let List = []
-const count = 200
-//模拟200条用户数据
-for (let i = 0; i < count; i++) {
-  List.push(
-    Mock.mock({
-      id: Mock.Random.guid(),
-      name: Mock.Random.cname(),
-      addr: Mock.mock('@county(true)'),
-      'age|18-60': 1,
-      birth: Mock.Random.date(),
-      sex: Mock.Random.integer(0, 1)
-    })
-  )
-}
 export default {
-  /**
-   * 获取列表
-   * 要带参数 name, page, limt; name可以不填, page,limit有默认值。
-   * @param name, page, limit
-   * @return {{code: number, count: number, data: *[]}}
-   */
+  // 获取用户列表（带分页和搜索）
   getUserList: config => {
-      					  //limit默认是10，因为分页器默认也是一页10个
-    let { name, page = 1, limit = 10 } = param2Obj(config.url)
-    if(name===undefined)
-    {
-      name=JSON.parse(config.body).name;
+    // 从请求中解析参数
+    let { name = '', page = 1, limit = 10 } = param2Obj(config.url)
+    try {
+      const body = JSON.parse(config.body)
+      name = body.name || name
+      page = body.page || page
+      limit = body.limit || limit
+    } catch (e) {
+      console.log('[getUserList] 非POST请求，使用URL参数')
     }
-   
-    const mockList = List.filter(user => {
-        //如果name存在会，根据name筛选数据
-      if (name && user.name.indexOf(name) === -1) return false
-      return true
-    })
-     //分页
-    const pageList = mockList.filter((item, index) => index < limit * page && index >= limit * (page - 1))
+
+    // 从单例中获取数据并筛选
+    let mockList = [...listSingleton.getList()]
+    if (name) {
+      mockList = mockList.filter(user => user.name.includes(name))
+    }
+
+    // 分页计算
+    const start = (page - 1) * limit
+    const end = page * limit
+    const pageList = mockList.slice(start, end)
     return {
       code: 200,
       data: {
         list: pageList,
-        count: mockList.length, //数据总条数需要返回
+        count: listSingleton.getList().length // 从单例获取总条数
       }
     }
   },
-  // deleteUser: config => {
-  //   /**
-  //  * 删除用户
-  //  * @param id
-  //  * @return {*}
-  //  */
-  //  console.log('config.url:', config.url) 
-  //   const { id } = param2Obj(config.url)
 
-  //   if (!id) {
-  //     return {
-  //       code: -999,
-  //       message: '参数不正确'
-  //     }
-  //   } else {
-  //     List = List.filter(u => u.id !== id)
-  //     return {
-  //       code: 200,
-  //       message: '删除成功'
-  //     }
-  //   }
-  // },
+  // 删除用户
+  deleteUser: ({ id }) => {
+    const newList = listSingleton.deleteItem(id)
+    return {
+      code: 200,
+      message: '删除成功',
+      data: newList
+    }
+  },
+
+  // 供外部修改列表（如新增）
+  setList: (newList) => {
+    return listSingleton.setList(newList)
+  }
 }
+    

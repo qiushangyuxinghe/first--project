@@ -3,8 +3,8 @@ const env = import.meta.env.MODE || "prod"
 
 const EnvConfig = {
     development:{
-        baseApi:"/api",
-        mockApi:"https://apifoxmock.com/m1/4068509-0-default/api"
+        baseApi:"http://127.0.0.1:3002",
+        mockApi:"http://127.0.0.1:3002"
     },
     test:{
         baseApi:"//test.future.com/api",

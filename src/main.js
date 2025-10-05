@@ -27,6 +27,7 @@ app.config.globalProperties.$api = api
 app.use(pinia)
 const store = useAllDataStore()
 store.addMenu(router,"refresh")
+  
 app.use(router)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component)
